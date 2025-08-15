@@ -2,6 +2,8 @@ package net.zcraft;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.zcraft.chat.ChatColor;
+import net.zcraft.chat.Component;
 import net.zcraft.events.EventBus;
 import net.zcraft.events.impl.EndTickEvent;
 import net.zcraft.events.impl.StartTickEvent;
@@ -22,6 +24,8 @@ import net.zcraft.util.threading.MultiExecutor;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
+import java.io.File;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.logging.LogManager;
 
@@ -46,13 +50,26 @@ public class ZCraftServer
 
     // variables
 
+    /*
+        THIS IS IN A VIRTUAL THREAD, YOU CAN USE CONNECTIONS AND DELAY IT.
+     */
+
+    // ---------------------------------------------
+    // 45 characters wide.
     @Getter @Setter
     private static Function<ZCraftConnection, ServerStatus> motdHandler = (conn) -> {
         ServerStatus status = new ServerStatus();
 
-        status.setDescription("ZCraft (0.1)")
+        Component component = Component.text("               Welcome To ZCraft").color(ChatColor.yellow).bold(true).withExtra(Component.text("\n           WE ARE IN DEVELOPMENT").color(ChatColor.red));
+
+        status.setDescription(component)
                 .setVersion("ZCraft Beta", 47)
-                .setPlayers(941, 20_000);
+                .setPlayers(941, -1);
+
+        File favicon = new File("favicon.png");
+
+        if (favicon.exists())
+            status.setFavicon(favicon);
 
         return status;
     };

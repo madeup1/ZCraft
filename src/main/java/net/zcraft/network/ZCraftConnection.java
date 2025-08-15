@@ -65,19 +65,19 @@ public class ZCraftConnection
             }
             catch (Exception e)
             {
-                Logger.info("Disconnecting socket");
-
-                ZCraftServer.getConnections().remove(this);
-                try
-                {
-                    socket.close();
-                }
-                catch (IOException ex)
-                {
-                    throw new RuntimeException(ex);
-                }
-
                 e.printStackTrace();
+            }
+
+            Logger.info("Disconnecting socket");
+
+            ZCraftServer.getConnections().remove(this);
+            try
+            {
+                socket.close();
+            }
+            catch (IOException ex)
+            {            
+                throw new RuntimeException(ex);
             }
         });
     }
@@ -110,6 +110,8 @@ public class ZCraftConnection
     public void sendPacket(IServerPacket packet)
     {
         this.sendPacket(packet, REUSE_BUFFER);
+
+        REUSE_BUFFER.clear();
     }
 
     public void sendPacketVirtual(IServerPacket packet)
@@ -132,7 +134,7 @@ public class ZCraftConnection
             {
                 Logger.debug("No more data from client");
 
-                throw new Exception("Socket has no more data");
+                return;
             }
 
             int len = packetLen;
