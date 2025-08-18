@@ -31,13 +31,11 @@ public class ClientStatusPing implements IClientPacket
     public void process(ZCraftConnection connection)
     {
         connection.sendPacket(new ServerStatusPong(time));
-
-        Logger.debug("ponging");
     }
 
     @Override
     public int getPacketId(PacketMode mode)
     {
-        return 0;
+        return 0x01;
     }
 }

@@ -4,6 +4,8 @@ import lombok.Getter;
 import net.zcraft.ZCraftServer;
 import net.zcraft.network.UnprocessedPacket;
 import net.zcraft.protocol.client.handshake.ClientHandshake;
+import net.zcraft.protocol.client.login.ClientEncryptionResponse;
+import net.zcraft.protocol.client.login.ClientLoginStart;
 import net.zcraft.protocol.client.status.ClientStatusPing;
 import net.zcraft.protocol.client.status.ClientStatusRequest;
 
@@ -16,8 +18,8 @@ import static net.zcraft.protocol.PacketMode.*;
 public class PacketManager
 {
     private final IPacketFactory[] packets = new IPacketFactory[PacketMode.C2S_PACKET_COUNT];
-    private Semaphore semaphore = new Semaphore(0);
-    private ArrayDeque<UnprocessedPacket> unprocessedPackets = new ArrayDeque<>();
+    private final Semaphore semaphore = new Semaphore(0);
+    private final ArrayDeque<UnprocessedPacket> unprocessedPackets = new ArrayDeque<>();
 
     public PacketManager()
     {
@@ -25,6 +27,9 @@ public class PacketManager
 
         register(Status, 0, ClientStatusRequest::new);
         register(Status, 1, ClientStatusPing::new);
+
+        register(Login, 0, ClientLoginStart::new);
+        register(Login, 1, ClientEncryptionResponse::new);
 
         if (ZCraftServer.getSettings().isPacketThread())
         {

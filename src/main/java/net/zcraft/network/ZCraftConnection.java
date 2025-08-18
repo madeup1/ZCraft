@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.zcraft.ZCraftServer;
+import net.zcraft.entities.EntityPlayer;
 import net.zcraft.init.ZCraftSettings;
 import net.zcraft.network.buffers.ReadBuffer;
 import net.zcraft.network.buffers.WriteBuffer;
@@ -11,15 +12,23 @@ import net.zcraft.protocol.IClientPacket;
 import net.zcraft.protocol.IServerPacket;
 import net.zcraft.protocol.PacketMode;
 import net.zcraft.protocol.server.status.ServerStatusResponse;
+import net.zcraft.util.CipherPair;
 import net.zcraft.util.ConnectionUtils;
 import net.zcraft.util.Flags;
+import net.zcraft.util.ZlibUtils;
 import org.tinylog.Logger;
 
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import static net.zcraft.network.buffers.Types.*;
@@ -28,12 +37,19 @@ import static net.zcraft.network.buffers.Types.*;
 public class ZCraftConnection
 {
     private final Socket socket;
-    private final InputStream inputStream;
-    private final OutputStream outputStream;
+    private InputStream inputStream;
+    private OutputStream outputStream;
     @Setter private volatile int compressionThreshold = -1;
     @Setter private volatile PacketMode packetMode;
 
+    @Getter @Setter private volatile EntityPlayer player;
+
     private static final WriteBuffer REUSE_BUFFER = new WriteBuffer();
+
+    @Getter @Setter private volatile CipherPair cipher;
+
+    // flag storage mainly?
+    private static final Map<String, Object> flags = new HashMap<>();
 
     @SneakyThrows
     public ZCraftConnection(Socket socket)
@@ -76,7 +92,7 @@ public class ZCraftConnection
                 socket.close();
             }
             catch (IOException ex)
-            {            
+            {
                 throw new RuntimeException(ex);
             }
         });
@@ -88,23 +104,68 @@ public class ZCraftConnection
         packet.write(buffer);
 
         byte[] data = buffer.getBytes();
-
         buffer.clear();
 
-        int dataLen = data.length;
+        boolean compressed = compressionThreshold != -1 && data.length >= compressionThreshold;
+        int preCompressLength = data.length;
 
-        buffer.write(VARINT, dataLen);
+        if (compressed)
+            data = ZlibUtils.compress(data);
+
+        if (compressed) {
+            buffer.write(VARINT, data.length + ConnectionUtils.getVarIntLength(preCompressLength));
+            buffer.write(VARINT, preCompressLength);
+        } else {
+            if (compressionThreshold != -1) {
+                buffer.write(VARINT, data.length + ConnectionUtils.getVarIntLength(0));
+                buffer.write(VARINT, 0);
+            } else {
+                buffer.write(VARINT, data.length);
+            }
+        }
+
         buffer.UNSAFE_write(data);
 
-        try
-        {
-            this.outputStream.write(buffer.getBytes());
-        }
-        catch (Exception e)
-        {
-            // disconnect
+        data = buffer.getBytes();
+
+        try {
+            this.outputStream.write(data);
+            this.outputStream.flush();
+        } catch (Exception e) {
             System.out.println("Failed to send packet");
         }
+    }
+
+    public void sendPackets(IServerPacket... packets)
+    {
+        for (IServerPacket packet : packets)
+        {
+            this.sendPacket(packet, REUSE_BUFFER);
+            REUSE_BUFFER.clear();
+        }
+    }
+
+    public void setCipher(CipherPair pair)
+    {
+        this.cipher = pair;
+        this.outputStream = new CipherOutputStream(outputStream, cipher.getCipherOut());
+        this.inputStream = new CipherInputStream(inputStream, cipher.getCipherIn());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get(String key)
+    {
+        return (T) flags.get(key);
+    }
+
+    public <T> void set(String key, T value)
+    {
+        flags.put(key, value);
+    }
+
+    public void remove(String key)
+    {
+        flags.remove(key);
     }
 
     public void sendPacket(IServerPacket packet)
@@ -150,15 +211,17 @@ public class ZCraftConnection
                 }
                 else
                 {
-                        // Packet is compressed
+                    // Packet is compressed
                     len = dataLength;
                     compressed = true;
                 }
             }
-            // decrypt here
-            // compression here
 
             byte[] data = inputStream.readNBytes(len);
+
+            if (compressed)
+                data = ZlibUtils.decompress(data);
+
             ReadBuffer buffer = new ReadBuffer(data);
             int packId = buffer.read(VARINT);
 
@@ -182,7 +245,7 @@ public class ZCraftConnection
             }
             else
             {
-
+                ZCraftServer.getPacketManager().queue(new UnprocessedPacket(this, packet));
             }
         }
     }

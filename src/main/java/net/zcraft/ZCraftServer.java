@@ -4,10 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 import net.zcraft.chat.ChatColor;
 import net.zcraft.chat.Component;
+import net.zcraft.crypto.Encryption;
 import net.zcraft.events.EventBus;
 import net.zcraft.events.impl.EndTickEvent;
 import net.zcraft.events.impl.StartTickEvent;
 import net.zcraft.init.ZCraftSettings;
+import net.zcraft.instance.InstanceManager;
 import net.zcraft.loop.LoopManager;
 import net.zcraft.materials.Material;
 import net.zcraft.materials.MaterialImpl;
@@ -25,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import java.io.File;
+import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.logging.LogManager;
@@ -38,6 +41,8 @@ public class ZCraftServer
     @Getter
     private static ConnectionManager connections;
     @Getter
+    private static InstanceManager instanceManager;
+    @Getter
     private static PacketManager packetManager;
     @Getter
     private static NetworkListener listener;
@@ -47,6 +52,8 @@ public class ZCraftServer
     private static MultiExecutor executor;
     @Getter
     private static EventBus eventBus;
+    @Getter
+    private static Random random;
 
     // variables
 
@@ -86,6 +93,9 @@ public class ZCraftServer
         packetManager = new PacketManager();
         executor = new MultiExecutor(settings.getThreads());
         listener = new NetworkListener(settings.getPort());
+        instanceManager = new InstanceManager();
+
+        Encryption.init();
 
         eventBus = new EventBus();
 

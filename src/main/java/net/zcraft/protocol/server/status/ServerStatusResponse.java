@@ -20,8 +20,6 @@ public class ServerStatusResponse implements IServerPacket
     public void write(WriteBuffer buf)
     {
         buf.write(Types.STRING, status.toJson());
-
-        Logger.debug("JSON is " + status.toJson());
     }
 
     @Override
