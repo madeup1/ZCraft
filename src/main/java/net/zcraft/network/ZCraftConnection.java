@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.zcraft.ZCraftServer;
+import net.zcraft.chat.Component;
 import net.zcraft.entities.EntityPlayer;
 import net.zcraft.init.ZCraftSettings;
 import net.zcraft.network.buffers.ReadBuffer;
@@ -11,6 +12,7 @@ import net.zcraft.network.buffers.WriteBuffer;
 import net.zcraft.protocol.IClientPacket;
 import net.zcraft.protocol.IServerPacket;
 import net.zcraft.protocol.PacketMode;
+import net.zcraft.protocol.server.play.ServerDisconnect;
 import net.zcraft.protocol.server.status.ServerStatusResponse;
 import net.zcraft.util.CipherPair;
 import net.zcraft.util.ConnectionUtils;
@@ -158,6 +160,11 @@ public class ZCraftConnection
         return (T) flags.get(key);
     }
 
+    public boolean has(String key)
+    {
+        return flags.containsKey(key);
+    }
+
     public <T> void set(String key, T value)
     {
         flags.put(key, value);
@@ -234,7 +241,9 @@ public class ZCraftConnection
 
             if (packet == null)
             {
-                throw new IllegalArgumentException("Invalid packet. (" + packId + ")");
+                this.sendPacket(new ServerDisconnect(Component.text("Invalid packet (C" + Integer.toString(packId, 16) + ")\n\nPacket not supported yet.")));
+
+                throw new IllegalArgumentException("Invalid packet. (C" + Integer.toString(packId, 16) + ")");
             }
 
             packet.read(buffer);

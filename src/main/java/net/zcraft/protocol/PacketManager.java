@@ -6,6 +6,7 @@ import net.zcraft.network.UnprocessedPacket;
 import net.zcraft.protocol.client.handshake.ClientHandshake;
 import net.zcraft.protocol.client.login.ClientEncryptionResponse;
 import net.zcraft.protocol.client.login.ClientLoginStart;
+import net.zcraft.protocol.client.play.*;
 import net.zcraft.protocol.client.status.ClientStatusPing;
 import net.zcraft.protocol.client.status.ClientStatusRequest;
 
@@ -30,6 +31,16 @@ public class PacketManager
 
         register(Login, 0, ClientLoginStart::new);
         register(Login, 1, ClientEncryptionResponse::new);
+
+        register(Play, 0x00, ClientKeepAlive::new);
+        register(Play, 0x01, ClientMessage::new);
+        register(Play, 0x02, ClientUseEntity::new);
+        register(Play, 0x03, ClientPlayer::new);
+        register(Play, 0x04, ClientPlayerPos::new);
+        register(Play, 0x05, ClientPlayerLook::new);
+        register(Play, 0x06, ClientPlayerPosLook::new);
+        register(Play, 0x15, ClientSettings::new);
+        register(Play, 0x17, ClientPluginMessage::new);
 
         if (ZCraftServer.getSettings().isPacketThread())
         {

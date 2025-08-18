@@ -7,7 +7,7 @@ public enum Gamemode
     Adventure,
     Spectator;
 
-    private byte toByte()
+    public byte toByte()
     {
         return (byte) this.ordinal();
     }

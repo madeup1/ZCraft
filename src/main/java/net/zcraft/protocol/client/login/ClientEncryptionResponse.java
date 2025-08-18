@@ -21,11 +21,12 @@ import java.util.Arrays;
 public class ClientEncryptionResponse implements IClientPacket
 {
     private CipherPair cipherPair;
+    private byte[] shared;
     private byte[] verifyToken;
     @Override
     public void read(ReadBuffer buf)
     {
-        byte[] shared = buf.UNSAFE_read(buf.read(Types.VARINT));
+        shared = buf.UNSAFE_read(buf.read(Types.VARINT));
         verifyToken = buf.UNSAFE_read(buf.read(Types.VARINT));
 
         shared = Encryption.decrypt(shared);
@@ -54,15 +55,18 @@ public class ClientEncryptionResponse implements IClientPacket
         connection.setCipher(cipherPair);
 
         EntityPlayer player = new EntityPlayer(connection.get("name"), connection);
+        connection.setPlayer(player);
 
-        player.setUuid(ConnectionUtils.getUuid(player.getName()));
+        connection.set("secret", shared);
 
-        if (!player.authenticate())
+        if (!player.isAuthenticated())
         {
             connection.sendPacket(new ServerDisconnect("Invalid session! Maybe restart your game?"));
 
             return;
         }
+
+        player.setUuid(ConnectionUtils.getUuid(player.getName()));
 
         connection.sendPacket(new ServerLoginSuccess(player.getName(), player.getUuid().toString()));
         Logger.debug("Name: {}, UUID: {}", player.getName(), player.getUuid());

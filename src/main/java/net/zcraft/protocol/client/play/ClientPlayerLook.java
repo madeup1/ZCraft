@@ -1,21 +1,24 @@
-package net.zcraft.protocol.client.status;
+package net.zcraft.protocol.client.play;
 
-import net.zcraft.ZCraftServer;
+import lombok.Getter;
 import net.zcraft.network.ZCraftConnection;
 import net.zcraft.network.buffers.ReadBuffer;
+import net.zcraft.network.buffers.Types;
 import net.zcraft.protocol.IClientPacket;
 import net.zcraft.protocol.PacketMode;
-import net.zcraft.protocol.server.status.ServerStatusResponse;
-import net.zcraft.util.status.ServerStatus;
 
-import java.util.concurrent.Future;
-
-public class ClientStatusRequest implements IClientPacket
+@Getter
+public class ClientPlayerLook implements IClientPacket
 {
+    private float yaw;
+    private float pitch;
+    private boolean onGround;
     @Override
     public void read(ReadBuffer buf)
     {
-
+        this.yaw = buf.read(Types.FLOAT);
+        this.pitch = buf.read(Types.FLOAT);
+        this.onGround = buf.read(Types.BOOLEAN);
     }
 
     @Override
@@ -27,13 +30,12 @@ public class ClientStatusRequest implements IClientPacket
     @Override
     public void process(ZCraftConnection connection)
     {
-        // this is in virtual thread so requests are safe
-        connection.sendPacket(new ServerStatusResponse(ZCraftServer.getMotdHandler().apply(connection)));
+
     }
 
     @Override
     public int getPacketId(PacketMode mode)
     {
-        return 0x00;
+        return 0x05;
     }
 }

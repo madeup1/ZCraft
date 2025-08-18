@@ -2,6 +2,8 @@ package net.zcraft;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.zcraft.auth.AuthManager;
+import net.zcraft.auth.impl.MojangAuthenticator;
 import net.zcraft.chat.ChatColor;
 import net.zcraft.chat.Component;
 import net.zcraft.crypto.Encryption;
@@ -10,6 +12,7 @@ import net.zcraft.events.impl.EndTickEvent;
 import net.zcraft.events.impl.StartTickEvent;
 import net.zcraft.init.ZCraftSettings;
 import net.zcraft.instance.InstanceManager;
+import net.zcraft.instance.impl.BasicInstance;
 import net.zcraft.loop.LoopManager;
 import net.zcraft.materials.Material;
 import net.zcraft.materials.MaterialImpl;
@@ -20,13 +23,18 @@ import net.zcraft.network.ZCraftConnection;
 import net.zcraft.network.buffers.ReadBuffer;
 import net.zcraft.network.buffers.Types;
 import net.zcraft.protocol.PacketManager;
-import net.zcraft.util.NanoTimer;
+import net.zcraft.util.*;
 import net.zcraft.util.status.ServerStatus;
 import net.zcraft.util.threading.MultiExecutor;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -36,7 +44,6 @@ public class ZCraftServer
 {
     @Getter
     private static ZCraftSettings settings = ZCraftSettings.DEFAULT;
-
     // managers
     @Getter
     private static ConnectionManager connections;
@@ -44,6 +51,10 @@ public class ZCraftServer
     private static InstanceManager instanceManager;
     @Getter
     private static PacketManager packetManager;
+    @Getter
+    private static AuthManager authManager;
+    @Getter
+    private static HttpClient httpClient;
     @Getter
     private static NetworkListener listener;
     @Getter
@@ -63,6 +74,7 @@ public class ZCraftServer
 
     // ---------------------------------------------
     // 45 characters wide.
+
     @Getter @Setter
     private static Function<ZCraftConnection, ServerStatus> motdHandler = (conn) -> {
         ServerStatus status = new ServerStatus();
@@ -94,6 +106,14 @@ public class ZCraftServer
         executor = new MultiExecutor(settings.getThreads());
         listener = new NetworkListener(settings.getPort());
         instanceManager = new InstanceManager();
+        authManager = new AuthManager();
+
+        instanceManager.setDefaultInstance(new BasicInstance(Gamemode.Creative, Difficulty.Easy, Dimension.End, LevelType.Flat));
+
+        authManager.setProvider(new MojangAuthenticator());
+
+        httpClient = HttpClient.newHttpClient();
+        random = new Random(System.currentTimeMillis());
 
         Encryption.init();
 
