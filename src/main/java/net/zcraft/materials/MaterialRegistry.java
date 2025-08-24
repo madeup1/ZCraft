@@ -1,6 +1,8 @@
 package net.zcraft.materials;
 
 import com.google.gson.*;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.zcraft.network.buffers.INetworkType;
@@ -31,6 +33,7 @@ public class MaterialRegistry implements Registry<String, Material>
 {
     private static final File cacheFile = new File("materials.cache");
     private final Map<String, Material> keyToValue;
+    private final Int2ObjectMap<Material> idMetaToValue = new Int2ObjectOpenHashMap<>();
 
     private static final INetworkType<Material> SERIALIZER = new INetworkType<Material>()
     {
@@ -135,6 +138,10 @@ public class MaterialRegistry implements Registry<String, Material>
     public void add(@NonNull String key, @NonNull Material value)
     {
         keyToValue.put(key, value);
+
+        int idKey = (value.getId() << 16) | (value.getMetadata() & 0xFFFF);
+
+        idMetaToValue.put(idKey, value);
     }
 
     @Override
@@ -147,6 +154,16 @@ public class MaterialRegistry implements Registry<String, Material>
     public @Nullable Material get(@NonNull String key)
     {
         return keyToValue.get(key);
+    }
+
+    public @Nullable Material get(int id, int metadata)
+    {
+        return idMetaToValue.get((id << 16) | (metadata & 0xFFFF));
+    }
+
+    public @Nullable Material get(int id)
+    {
+        return get(id, 0);
     }
 
     @Override

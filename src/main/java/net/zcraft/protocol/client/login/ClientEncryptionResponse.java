@@ -1,5 +1,6 @@
 package net.zcraft.protocol.client.login;
 
+import net.zcraft.ZCraftServer;
 import net.zcraft.crypto.Encryption;
 import net.zcraft.entities.EntityPlayer;
 import net.zcraft.network.ZCraftConnection;
@@ -10,6 +11,8 @@ import net.zcraft.protocol.PacketMode;
 import net.zcraft.protocol.server.login.ServerLoginSuccess;
 import net.zcraft.protocol.server.play.ServerDisconnect;
 import net.zcraft.protocol.server.play.ServerJoinGame;
+import net.zcraft.protocol.server.play.ServerSetCompression;
+import net.zcraft.protocol.server.play.ServerSpawnPosition;
 import net.zcraft.util.CipherPair;
 import net.zcraft.util.ConnectionUtils;
 import net.zcraft.util.CryptoUtils;
@@ -68,11 +71,16 @@ public class ClientEncryptionResponse implements IClientPacket
 
         player.setUuid(ConnectionUtils.getUuid(player.getName()));
 
+        connection.sendPacket(new ServerSetCompression(ZCraftServer.getSettings().getCompressionThreshold()));
+        connection.setCompressionThreshold(ZCraftServer.getSettings().getCompressionThreshold());
         connection.sendPacket(new ServerLoginSuccess(player.getName(), player.getUuid().toString()));
         Logger.debug("Name: {}, UUID: {}", player.getName(), player.getUuid());
         connection.setPacketMode(PacketMode.Play);
 
         connection.sendPacket(new ServerJoinGame(player));
+        connection.sendPacket(new ServerSpawnPosition(player.getInstance().spawnPosition()));
+
+        player.init();
     }
 
     @Override

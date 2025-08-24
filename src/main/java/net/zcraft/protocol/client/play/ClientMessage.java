@@ -1,6 +1,8 @@
 package net.zcraft.protocol.client.play;
 
 import lombok.Getter;
+import net.zcraft.ZCraftServer;
+import net.zcraft.events.impl.ChatEvent;
 import net.zcraft.network.ZCraftConnection;
 import net.zcraft.network.buffers.ReadBuffer;
 import net.zcraft.network.buffers.Types;
@@ -26,7 +28,7 @@ public class ClientMessage implements IClientPacket
     @Override
     public void process(ZCraftConnection connection)
     {
-
+        ZCraftServer.getEventBus().post(new ChatEvent(this.message, connection.getPlayer()));
     }
 
     @Override

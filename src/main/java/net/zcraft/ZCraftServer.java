@@ -8,6 +8,7 @@ import net.zcraft.chat.ChatColor;
 import net.zcraft.chat.Component;
 import net.zcraft.crypto.Encryption;
 import net.zcraft.events.EventBus;
+import net.zcraft.events.impl.ChatEvent;
 import net.zcraft.events.impl.EndTickEvent;
 import net.zcraft.events.impl.StartTickEvent;
 import net.zcraft.init.ZCraftSettings;
@@ -23,6 +24,8 @@ import net.zcraft.network.ZCraftConnection;
 import net.zcraft.network.buffers.ReadBuffer;
 import net.zcraft.network.buffers.Types;
 import net.zcraft.protocol.PacketManager;
+import net.zcraft.protocol.server.play.ServerChatMessage;
+import net.zcraft.protocol.server.play.ServerKeepAlive;
 import net.zcraft.util.*;
 import net.zcraft.util.status.ServerStatus;
 import net.zcraft.util.threading.MultiExecutor;
@@ -65,6 +68,8 @@ public class ZCraftServer
     private static EventBus eventBus;
     @Getter
     private static Random random;
+    @Getter
+    private static long ticks;
 
     // variables
 
@@ -119,6 +124,16 @@ public class ZCraftServer
 
         eventBus = new EventBus();
 
+        eventBus.register(ChatEvent.class, (c) -> {
+            Logger.debug("{}: {}", c.getPlayer().getName(), c.getMessage());
+
+            Component component = Component.text(c.getPlayer().getName()).color(ChatColor.gray)
+                            .withExtra(Component.text(": " + c.getMessage()).color(ChatColor.white));
+
+            c.getPlayer().getInstance()
+                    .broadcast(new ServerChatMessage(component, (byte) 0));
+        });
+
         long lastTick = 0L;
         long interval = 50_000_000L; // 50 ms in nanoseconds
 
@@ -156,7 +171,16 @@ public class ZCraftServer
         // queue neccesary packets to be processed.
         packetManager.process();
 
+        // keep alive
+        if (ticks % settings.getKeepAliveDelay() == 0)
+            connections.getConnections().forEach(c -> {
+                if (c.getPlayer() == null || !c.getPlayer().isLoaded()) return;
+                c.sendPacketVirtual(new ServerKeepAlive(random.nextInt(0, 127)));
+            });
+
         eventBus.post(new EndTickEvent(System.currentTimeMillis()));
+
+        ticks++;
     }
 
 }

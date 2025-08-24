@@ -21,6 +21,13 @@ public class WriteBuffer
         type.write(this, value);
     }
 
+    @SafeVarargs
+    public final <T> void write(INetworkType<T> type, T... values)
+    {
+        for (T value : values)
+            type.write(this, value);
+    }
+
     public void UNSAFE_write(byte[] data)
     {
         BufferSegment seg = new BufferSegment(data, data.length);

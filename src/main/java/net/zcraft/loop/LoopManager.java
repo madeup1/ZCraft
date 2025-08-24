@@ -22,6 +22,9 @@ public class LoopManager
 
     public void run()
     {
+        if (hooks.isEmpty())
+            return;
+
         lock.queue(() -> {
             hooks.forEach(ILoopHook::execute);
         });

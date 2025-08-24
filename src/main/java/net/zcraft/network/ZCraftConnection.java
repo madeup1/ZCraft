@@ -1,6 +1,7 @@
 package net.zcraft.network;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import net.zcraft.ZCraftServer;
@@ -108,22 +109,34 @@ public class ZCraftConnection
         byte[] data = buffer.getBytes();
         buffer.clear();
 
-        boolean compressed = compressionThreshold != -1 && data.length >= compressionThreshold;
+        boolean compressed = compressionThreshold != -1 && (data.length >= compressionThreshold);
+
+        int bonusLength = (compressionThreshold == -1 ? 0 : 1);
         int preCompressLength = data.length;
 
         if (compressed)
-            data = ZlibUtils.compress(data);
+        {
+            Logger.debug("Compressing packet of size " + data.length);
 
-        if (compressed) {
-            buffer.write(VARINT, data.length + ConnectionUtils.getVarIntLength(preCompressLength));
+            data = ZlibUtils.compress(data);
+        }
+
+        if (compressed)
+        {
+            int packetLen = data.length + ConnectionUtils.getVarIntLength(preCompressLength);
+
+            buffer.write(VARINT, packetLen);
             buffer.write(VARINT, preCompressLength);
-        } else {
-            if (compressionThreshold != -1) {
-                buffer.write(VARINT, data.length + ConnectionUtils.getVarIntLength(0));
+
+        }
+        else
+        {
+            buffer.write(VARINT, data.length + bonusLength);
+            if (compressionThreshold != -1)
                 buffer.write(VARINT, 0);
-            } else {
-                buffer.write(VARINT, data.length);
-            }
+
+            // Logger.debug("Compression Threshold: " + compressionThreshold);
+            // Logger.debug("Header: ({}, {})", data.length + bonusLength, 0);
         }
 
         buffer.UNSAFE_write(data);
@@ -155,22 +168,22 @@ public class ZCraftConnection
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(String key)
+    public <T> T get(@NonNull String key)
     {
         return (T) flags.get(key);
     }
 
-    public boolean has(String key)
+    public boolean has(@NonNull String key)
     {
         return flags.containsKey(key);
     }
 
-    public <T> void set(String key, T value)
+    public <T> void set(@NonNull String key, @NonNull T value)
     {
         flags.put(key, value);
     }
 
-    public void remove(String key)
+    public void remove(@NonNull String key)
     {
         flags.remove(key);
     }
@@ -232,8 +245,6 @@ public class ZCraftConnection
             ReadBuffer buffer = new ReadBuffer(data);
             int packId = buffer.read(VARINT);
 
-            Logger.debug("Found Packet ID: " + packId);
-            Logger.debug("Packet Mode: " + packetMode);
             // match packet and read data
             IClientPacket packet = ZCraftServer
                     .getPacketManager()
@@ -241,9 +252,14 @@ public class ZCraftConnection
 
             if (packet == null)
             {
-                this.sendPacket(new ServerDisconnect(Component.text("Invalid packet (C" + Integer.toString(packId, 16) + ")\n\nPacket not supported yet.")));
+                Logger.debug("Found Packet ID: " + packId);
+                Logger.debug("Packet Mode: " + packetMode);
 
-                throw new IllegalArgumentException("Invalid packet. (C" + Integer.toString(packId, 16) + ")");
+                // this.sendPacket(new ServerDisconnect(Component.text("Invalid packet (C" + Integer.toString(packId, 16) + ")\n\nPacket not supported yet.")));
+
+                // throw new IllegalArgumentException("Invalid packet. (C" + Integer.toString(packId, 16) + ")");
+
+                continue;
             }
 
             packet.read(buffer);

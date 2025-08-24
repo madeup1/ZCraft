@@ -16,11 +16,16 @@ public class ZCraftSettings
             .threads(4)
             .port(25565)
             .packetThread(true)
+            .compressionThreshold(256)
+            .keepAliveDelay(40)
             .build();
 
 
     // vars
     private int threads;
     private int port;
+    private int compressionThreshold;
+    // in ticks (btw)
+    private int keepAliveDelay;
     private boolean packetThread = true;
 }

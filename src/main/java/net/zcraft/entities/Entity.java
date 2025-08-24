@@ -16,4 +16,11 @@ public abstract class Entity
 
         this.instance = ZCraftServer.getInstanceManager().getDefaultInstance();
     }
+
+    public void init()
+    {
+
+    }
+
+    public abstract void tick();
 }
