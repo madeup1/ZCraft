@@ -30,4 +30,10 @@ public class NbtInt extends NbtTag<Integer>
     {
         return NbtTagType.Int;
     }
+
+    @Override
+    public String toString()
+    {
+        return getValue().toString();
+    }
 }

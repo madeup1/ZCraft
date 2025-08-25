@@ -21,7 +21,7 @@ public interface Types
 
             int value = 0;
             for (int i = 0; i < data.length; i++) {
-                value |= (data[i] & 0xFF) << (i * 8);
+                value |= (data[i] & 0xFF) << ((data.length - 1 - i) * 8);
             }
 
             if (Flags.ENDIAN_CONVERSION)
@@ -39,8 +39,9 @@ public interface Types
             }
 
             byte[] data = new byte[4];
-            for (int i = 0; i < data.length; i++)
-                data[i] = (byte) (value >> (i * 8));
+            for (int i = 0; i < data.length; i++) {
+                data[i] = (byte) (value >> ((data.length - 1 - i) * 8));
+            }
 
             buffer.UNSAFE_write(data);
         }
@@ -73,7 +74,7 @@ public interface Types
 
             short value = 0;
             for (int i = 0; i < data.length; i++) {
-                value |= (short) ((data[i] & 0xFF) << (i * 8));
+                value |= (short) ((data[i] & 0xFF) << ((data.length - 1 - i) * 8));
             }
 
             if (Flags.ENDIAN_CONVERSION)
@@ -91,8 +92,9 @@ public interface Types
             }
 
             byte[] data = new byte[2];
-            for (int i = 0; i < data.length; i++)
-                data[i] = (byte) (value >> (i * 8));
+            for (int i = 0; i < data.length; i++) {
+                data[i] = (byte) (value >> ((data.length - 1 - i) * 8));
+            }
 
             buffer.UNSAFE_write(data);
         }
@@ -110,7 +112,7 @@ public interface Types
 
             long value = 0;
             for (int i = 0; i < data.length; i++) {
-                value |= ((long) (data[i] & 0xFF) << (i * 8));
+                value |= ((long) (data[i] & 0xFF) << ((data.length - 1 - i) * 8));
             }
 
             if (Flags.ENDIAN_CONVERSION)
@@ -128,8 +130,9 @@ public interface Types
             }
 
             byte[] data = new byte[8];
-            for (int i = 0; i < data.length; i++)
-                data[i] = (byte) (value >> (i * 8));
+            for (int i = 0; i < data.length; i++) {
+                data[i] = (byte) (value >> ((data.length - 1 - i) * 8));
+            }
 
             buffer.UNSAFE_write(data);
         }

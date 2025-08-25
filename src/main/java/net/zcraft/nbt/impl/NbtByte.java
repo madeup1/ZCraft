@@ -32,4 +32,10 @@ public class NbtByte extends NbtTag<Byte>
     {
         return NbtTagType.Byte;
     }
+
+    @Override
+    public String toString()
+    {
+        return this.getValue().toString();
+    }
 }

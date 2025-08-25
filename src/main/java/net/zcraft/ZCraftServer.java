@@ -5,7 +5,9 @@ import lombok.Setter;
 import net.zcraft.auth.AuthManager;
 import net.zcraft.auth.impl.MojangAuthenticator;
 import net.zcraft.chat.ChatColor;
+import net.zcraft.chat.ChatPosition;
 import net.zcraft.chat.Component;
+import net.zcraft.commands.CommandManager;
 import net.zcraft.crypto.Encryption;
 import net.zcraft.events.EventBus;
 import net.zcraft.events.impl.ChatEvent;
@@ -26,6 +28,7 @@ import net.zcraft.network.buffers.Types;
 import net.zcraft.protocol.PacketManager;
 import net.zcraft.protocol.server.play.ServerChatMessage;
 import net.zcraft.protocol.server.play.ServerKeepAlive;
+import net.zcraft.protocol.server.play.ServerSetSlot;
 import net.zcraft.util.*;
 import net.zcraft.util.status.ServerStatus;
 import net.zcraft.util.threading.MultiExecutor;
@@ -54,6 +57,8 @@ public class ZCraftServer
     private static InstanceManager instanceManager;
     @Getter
     private static PacketManager packetManager;
+    @Getter
+    private static CommandManager commandManager;
     @Getter
     private static AuthManager authManager;
     @Getter
@@ -112,6 +117,7 @@ public class ZCraftServer
         listener = new NetworkListener(settings.getPort());
         instanceManager = new InstanceManager();
         authManager = new AuthManager();
+        commandManager = new CommandManager();
 
         instanceManager.setDefaultInstance(new BasicInstance(Gamemode.Creative, Difficulty.Easy, Dimension.End, LevelType.Flat));
 
@@ -127,11 +133,18 @@ public class ZCraftServer
         eventBus.register(ChatEvent.class, (c) -> {
             Logger.debug("{}: {}", c.getPlayer().getName(), c.getMessage());
 
+            if (c.getMessage().startsWith("/"))
+            {
+                commandManager.execute(c.getMessage(), c.getPlayer());
+
+                return;
+            }
+
             Component component = Component.text(c.getPlayer().getName()).color(ChatColor.gray)
                             .withExtra(Component.text(": " + c.getMessage()).color(ChatColor.white));
 
             c.getPlayer().getInstance()
-                    .broadcast(new ServerChatMessage(component, (byte) 0));
+                    .broadcast(new ServerChatMessage(component, ChatPosition.Chat));
         });
 
         long lastTick = 0L;

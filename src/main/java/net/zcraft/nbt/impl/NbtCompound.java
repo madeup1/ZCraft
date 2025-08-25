@@ -81,4 +81,16 @@ public class NbtCompound extends NbtTag<HashMap<String, NbtTag<?>>>
     {
         return NbtTagType.Compound;
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("{");
+
+        this.getValue().forEach((k, v) -> {
+            builder.append("\"").append(k).append("\": ").append(v.toString()).append(",");
+        });
+
+        return builder.append("}").toString();
+    }
 }

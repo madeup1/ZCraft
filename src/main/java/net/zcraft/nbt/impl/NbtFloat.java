@@ -30,4 +30,10 @@ public class NbtFloat extends NbtTag<Float>
     {
         return NbtTagType.Float;
     }
+
+    @Override
+    public String toString()
+    {
+        return getValue() + "F";
+    }
 }

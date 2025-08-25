@@ -56,4 +56,16 @@ public class NbtList extends NbtTag<List<NbtTag<?>>>
     {
         return NbtTagType.List;
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("[");
+
+        getValue().forEach(c -> {
+            builder.append(c.toString()).append(',');
+        });
+
+        return builder.append(']').toString();
+    }
 }

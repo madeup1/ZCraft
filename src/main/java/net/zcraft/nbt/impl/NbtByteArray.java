@@ -37,4 +37,15 @@ public class NbtByteArray extends NbtTag<byte[]>
     {
         return NbtTagType.ByteArray;
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("[");
+
+        for (byte b : this.getValue())
+            builder.append(b).append(",");
+
+        return builder.append("]").toString();
+    }
 }

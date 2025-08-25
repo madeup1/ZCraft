@@ -2,8 +2,10 @@ package net.zcraft.materials;
 
 import com.google.gson.JsonObject;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import net.zcraft.blocks.Block;
+import net.zcraft.items.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
 
 @Getter
@@ -72,5 +74,15 @@ public class Material
         if (!this.isBlock())
             return null;
         return reference;
+    }
+
+    public @NonNull ItemStack asItemStack()
+    {
+        return asItemStack(1);
+    }
+
+    public @NonNull ItemStack asItemStack(int count)
+    {
+        return new ItemStack(this, count);
     }
 }

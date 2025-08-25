@@ -4,12 +4,18 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import net.zcraft.ZCraftServer;
+import net.zcraft.chat.ChatPosition;
+import net.zcraft.chat.Component;
 import net.zcraft.instance.Instance;
+import net.zcraft.materials.Materials;
 import net.zcraft.network.ZCraftConnection;
 import net.zcraft.position.Vec3;
 import net.zcraft.protocol.IServerPacket;
+import net.zcraft.protocol.server.play.ServerChatMessage;
 import net.zcraft.protocol.server.play.ServerPlayerPosLook;
+import net.zcraft.protocol.server.play.ServerSetSlot;
 import net.zcraft.util.Gamemode;
+import org.tinylog.Logger;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -99,12 +105,24 @@ public class EntityPlayer extends Entity
         }
 
         this.sendPacket(new ServerPlayerPosLook(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch(), (byte) 0));
+
+        Logger.debug("Setting first slot to that");
     }
 
     @Override
     public void tick()
     {
 
+    }
+
+    public void sendMessage(Component component)
+    {
+        this.sendPacket(new ServerChatMessage(component, ChatPosition.Chat));
+    }
+
+    public void sendMessage(String text)
+    {
+        this.sendMessage(Component.text(text));
     }
 
     public double getX()

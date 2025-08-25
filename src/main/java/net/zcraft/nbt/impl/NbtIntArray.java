@@ -40,4 +40,15 @@ public class NbtIntArray extends NbtTag<int[]>
     {
         return NbtTagType.IntArray;
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("[");
+
+        for (int val : getValue())
+            builder.append(val).append(',');
+
+        return builder.append(']').toString();
+    }
 }

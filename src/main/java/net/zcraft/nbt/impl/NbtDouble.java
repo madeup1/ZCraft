@@ -30,4 +30,10 @@ public class NbtDouble extends NbtTag<Double>
     {
         return NbtTagType.Double;
     }
+
+    @Override
+    public String toString()
+    {
+        return getValue() + "D";
+    }
 }

@@ -30,4 +30,10 @@ public class NbtShort extends NbtTag<Short>
     {
         return NbtTagType.Short;
     }
+
+    @Override
+    public String toString()
+    {
+        return this.getValue() + "S";
+    }
 }

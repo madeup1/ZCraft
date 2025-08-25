@@ -19,13 +19,26 @@ public class Nbt
         @Override
         public NbtCompound read(ReadBuffer buffer)
         {
-            return null;
+            NbtTagType tag = NbtTagType.read(buffer);
+
+            if (tag != NbtTagType.Compound)
+                return null;
+
+            String name = readString(buffer);
+
+            NbtCompound compound = Nbt.create(10);
+            compound.read(buffer);
+
+            return compound;
         }
 
         @Override
         public void write(WriteBuffer buffer, NbtCompound value)
         {
-            NbtCompound compound = Nbt.create(10);
+            buffer.write(Types.BYTE, value.type().toByte());
+            writeString(buffer, "");
+            value.write(buffer);
+            buffer.write(Types.BYTE, NbtTagType.End.toByte());
         }
     };
 

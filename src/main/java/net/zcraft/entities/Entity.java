@@ -13,7 +13,6 @@ public abstract class Entity
     public Entity()
     {
         this.entityId = ZCraftServer.getInstanceManager().getEntityId();
-
         this.instance = ZCraftServer.getInstanceManager().getDefaultInstance();
     }
 

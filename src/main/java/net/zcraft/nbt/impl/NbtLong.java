@@ -30,4 +30,10 @@ public class NbtLong extends NbtTag<Long>
     {
         return NbtTagType.Long;
     }
+
+    @Override
+    public String toString()
+    {
+        return getValue() + "L";
+    }
 }

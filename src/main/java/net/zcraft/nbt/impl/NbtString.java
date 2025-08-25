@@ -37,4 +37,10 @@ public class NbtString extends NbtTag<String>
     {
         return NbtTagType.String;
     }
+
+    @Override
+    public String toString()
+    {
+        return "\"" + this.getValue() + "\"";
+    }
 }
